@@ -1,6 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.BaseExtension
-import org.jetbrains.kotlin.konan.properties.Properties
 
 plugins {
     alias(libs.plugins.kotlin) apply false
@@ -17,16 +16,14 @@ fun String.execute(currentWorkingDir: File = file("./")): String {
     return out.standardOutput.asText.get().trim()
 }
 
-val localProperties = Properties()
-localProperties.load(file("local.properties").inputStream())
 val ciBuild = providers.environmentVariable("CI").isPresent
-val officialBuild by extra(localProperties.getProperty("officialBuild", "false") == "true")
+val officialBuild by extra(providers.environmentVariable("OFFICIAL_BUILD").orElse("false").get() == "true")
 
 @Suppress("unused")
-val crowdinProjectId: String by extra(localProperties.getProperty("crowdinProjectId", ""))
+val crowdinProjectId: String by extra(providers.environmentVariable("CROWDIN_PROJECT_ID").orElse("").get())
 
 @Suppress("unused")
-val crowdinApiKey: String by extra(localProperties.getProperty("crowdinApiKey", ""))
+val crowdinApiKey: String by extra(providers.environmentVariable("CROWDIN_API_KEY").orElse("").get())
 
 fun getUncommittedSuffix(): String {
     if (officialBuild) return ""
@@ -84,7 +81,7 @@ val minBackupVerCode by extra(65)
 val appPackageName by extra("org.frknkrc44.hma_oss")
 
 @Suppress("unused")
-val localBuild by extra(localProperties.getProperty("localBuild", "false") == "true")
+val localBuild by extra(providers.environmentVariable("LOCAL_BUILD").orElse("false").get() == "true")
 
 val androidSourceCompatibility = JavaVersion.VERSION_21
 val androidTargetCompatibility = JavaVersion.VERSION_21
@@ -106,12 +103,13 @@ fun Project.configureBaseExtension() {
             consumerProguardFiles("proguard-rules.pro")
         }
 
-        val config = localProperties.getProperty("fileDir")?.let {
+        val storeFilePath = providers.environmentVariable("SIGNING_STORE_FILE").orNull
+        val config = storeFilePath?.let {
             signingConfigs.create("config") {
                 storeFile = file(it)
-                storePassword = localProperties.getProperty("storePassword")
-                keyAlias = localProperties.getProperty("keyAlias")
-                keyPassword = localProperties.getProperty("keyPassword")
+                storePassword = providers.environmentVariable("SIGNING_STORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("SIGNING_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("SIGNING_KEY_PASSWORD").orNull
             }
         }
 
