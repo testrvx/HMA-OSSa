@@ -222,8 +222,8 @@ class HMAService(val pms: IPackageManager, val pmn: Any?) : IHMAService.Stub() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            frameworkHooks.add(PlatformCompatHook(this))
-            frameworkHooks.add(AppDataIsolationHook(this))
+            //frameworkHooks.add(PlatformCompatHook(this))
+            //frameworkHooks.add(AppDataIsolationHook(this))
         }
 
         frameworkHooks.add(ActivityHook(this))
